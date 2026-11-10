@@ -4,6 +4,8 @@ Ask a question about the plant's SOPs from your phone and get a short answer wit
 
 Built for the BiztelAI take home: FastAPI, a plain HTML phone UI, and RAG over the four sample PDFs from "Kaveri Precision Components, Hosur Plant". Thinking, user journey, AI critique and reflection are in [THINKING.md](THINKING.md).
 
+**Demo video (2 min 18 s):** https://drive.google.com/file/d/1dqw8MvYqbUZMGYsIJWmky4q6crKnIL9J/view?usp=sharing (me using it on the laptop with narration, then on my phone over Wi-Fi, then the revision warning and the safety banner).
+
 > How this was made: built with a lot of AI help. Swapnil's AI assistant (running on Claude) wrote most of the code and the first drafts of these docs. Details in THINKING.md.
 
 ## What it does
