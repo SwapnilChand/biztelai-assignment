@@ -1,0 +1,15 @@
+2/2  What is the recommended coolant concentration for the TX-200 CNC turning centre?
+2/2  The machine is showing alarm AL-104. What does it mean and what should the operator do?
+2/2  Who is allowed to remove a lockout lock from a machine?
+2/2  What is the outer diameter tolerance for the BH-220 bearing housing?
+2/2  How often should spindle runout be checked, and who does it?
+2/2  How many samples do I take from a lot of 200 castings?
+2/2  Where do I keep rejected material?
+2/2  The supplier did not send the material test certificate. Can we still inspect the lot?
+2/2  How do I replace a hydraulic hose on the TX-200?
+2/2  What is the maximum spindle speed of the TX-200?
+2/2  What is the canteen timing for the night shift?
+2/2  Who is the plant head?
+
+models: ['groq/openai/gpt-oss-20b']
+24/24 correct, median 6.1 s, worst 14.8 s

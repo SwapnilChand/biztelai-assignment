@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14171a">
+<title>Shopfloor Copilot</title>
+<style>
+  :root {
+    --ink: #14171a; --muted: #5b636b; --line: #d9dde1; --bg: #f3f4f5; --card: #fff;
+    --ok: #1d6b3a; --ok-bg: #e5f2e9; --no: #8a2b16; --no-bg: #fbe9e4;
+    --warn: #6b4a00; --warn-bg: #fff3c4; --warn-line: #e8b400; --accent: #f2b400;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100dvh; }
+  header { background: var(--ink); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+    display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 2; }
+  header .mark { width: 10px; height: 24px; background: var(--accent); border-radius: 2px; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  header .plant { margin-left: auto; font-size: 12px; color: #aeb5bb; text-align: right; line-height: 1.2; }
+  main { max-width: 680px; margin: 0 auto; padding: 16px 14px calc(140px + env(safe-area-inset-bottom)); }
+
+  .intro { color: var(--muted); font-size: 14px; margin: 4px 2px 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .chip { border: 1px solid var(--line); background: var(--card); border-radius: 18px; padding: 8px 12px;
+    font: inherit; font-size: 14px; color: var(--ink); text-align: left; cursor: pointer; touch-action: manipulation; }
+  .chip:active { background: #e9ecee; }
+
+  .qa { margin-top: 18px; scroll-margin-top: 64px; }
+  .q { font-weight: 650; font-size: 15px; margin: 0 2px 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; }
+  .badge.ok { color: var(--ok); background: var(--ok-bg); }
+  .badge.no { color: var(--no); background: var(--no-bg); }
+  .answer { white-space: pre-wrap; font-size: 17px; line-height: 1.5; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 10px; }
+
+  .rev { margin-top: 12px; background: var(--warn-bg); border-left: 4px solid var(--warn-line);
+    color: var(--warn); padding: 10px 12px; border-radius: 6px; font-size: 15px; }
+  .rev b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+
+  .next { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .safe { margin-top: 12px; background: var(--no-bg); border-left: 4px solid #c23b1e; color: var(--no);
+    padding: 10px 12px; border-radius: 6px; font-size: 15px; }
+  .safe b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .sources { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .sources h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 0 0 6px; }
+  details { border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; background: #fafbfb; }
+  summary { list-style: none; padding: 10px 12px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; }
+  summary::-webkit-details-marker { display: none; }
+  summary .doc { font-weight: 650; font-size: 14px; white-space: nowrap; }
+  summary .sec { font-size: 14px; color: var(--muted); grid-column: 1 / -1; }
+  summary .tag { font-size: 11px; font-weight: 700; color: var(--ok); white-space: nowrap; grid-row: 1; grid-column: 2; align-self: center; }
+  details.old summary .tag { color: var(--no); }
+  details[open] summary { border-bottom: 1px solid var(--line); }
+  .excerpt { padding: 10px 12px; font: 13px/1.45 ui-monospace, "SFMono-Regular", Menlo, monospace;
+    white-space: pre-wrap; overflow-x: auto; color: #2a2f34; }
+  .open { display: inline-block; margin: 0 12px 12px; font-size: 14px; color: var(--ink); font-weight: 600; }
+
+  .err { color: var(--no); }
+  .thinking { color: var(--muted); font-size: 15px; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: p 1s infinite ease-in-out; }
+  @keyframes p { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+
+  form { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 8px; z-index: 3; }
+  form .wrap { max-width: 680px; margin: 0 auto; display: flex; gap: 8px; width: 100%; }
+  textarea { flex: 1; font: inherit; font-size: 16px; border: 1px solid #b9c0c6; border-radius: 10px;
+    padding: 11px 12px; resize: none; height: 48px; max-height: 120px; color: var(--ink); background: #fff; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--ink); }
+  button.send { font: inherit; font-weight: 700; background: var(--ink); color: #fff; border: 0; border-radius: 10px;
+    padding: 0 18px; min-width: 76px; cursor: pointer; touch-action: manipulation; user-select: none; }
+  button.send:disabled { opacity: .45; }
+
+  .docs, .samples { border: 0; background: none; margin-top: 26px; font-size: 13px; color: var(--muted); }
+  .docs summary, .samples summary { padding: 8px 2px; font-size: 13px; display: block; border: 0; }
+  .samples { margin-top: 0; }
+  .samples[open] summary { border: 0; }
+  .docs ul { margin: 6px 0 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="mark"></span>
+  <h1>Shopfloor Copilot</h1>
+  <span class="plant" id="plant">answers from plant SOPs only</span>
+</header>
+
+<main>
+  <p class="intro">Ask about a procedure, an alarm, a tolerance or a safety rule. Every answer shows the document it came from.</p>
+  <details class="samples" id="samples" open><summary>Sample questions</summary><div class="chips" id="chips"></div></details>
+  <div id="feed"></div>
+  <details class="docs" id="docs"><summary>Documents loaded</summary><ul id="doclist"></ul></details>
+</main>
+
+<form id="f" autocomplete="off">
+  <div class="wrap">
+    <textarea id="q" rows="1" placeholder="Ask a question" enterkeyhint="send" aria-label="Question"></textarea>
+    <button class="send" id="send" type="submit">Ask</button>
+  </div>
+</form>
+
+<script>
+const SAMPLES = [
+  ["TX-200 coolant concentration", "What is the recommended coolant concentration for the TX-200 CNC turning centre?"],
+  ["Alarm AL-104", "The machine is showing alarm AL-104. What does it mean and what should the operator do?"],
+  ["Who can remove a lockout lock?", "Who is allowed to remove a lockout lock from a machine?"],
+  ["BH-220 outer diameter tolerance", "What is the outer diameter tolerance for the BH-220 bearing housing?"],
+  ["Spindle runout check", "How often should spindle runout be checked, and who does it?"],
+];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+for (const [label, q] of SAMPLES) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = label; b.title = q;
+  b.onclick = () => ask(q);
+  $("chips").appendChild(b);
+}
+
+fetch("/api/documents").then((r) => r.json()).then((docs) => {
+  $("doclist").innerHTML = docs.map((d) =>
+    `<li><a href="/files/${encodeURIComponent(d.file)}" target="_blank">${esc(d.doc_no)} Rev ${esc(d.revision)}</a> ${esc(d.title)}` +
+    (d.current ? "" : ` <b>(superseded by ${esc(d.superseded_by)})</b>`) + `</li>`).join("");
+}).catch(() => {});
+
+function sourceHtml(s, old) {
+  const tag = old ? "OLD REVISION" : "CURRENT";
+  return `<details class="${old ? "old" : ""}">
+    <summary><span class="doc">${esc(s.doc_no)} Rev ${esc(s.revision)}</span>
+      <span class="sec">${esc(s.section)} · p.${s.page}</span><span class="tag">${tag}</span></summary>
+    <div class="excerpt">${esc(s.text)}</div>
+    <a class="open" href="/files/${encodeURIComponent(s.file)}#page=${s.page}" target="_blank">Open PDF, page ${s.page}</a>
+  </details>`;
+}
+
+function render(box, a) {
+  let h = `<span class="badge ${a.found ? "ok" : "no"}">${a.found ? "From the documents" : "Not in the documents"}</span>`;
+  h += `<div class="answer">${esc(a.answer)}</div>`;
+  if (!a.found) h += `<div class="next">Nothing was guessed. Ask your shift supervisor or the document owner, and check the QMS.</div>`;
+  if (a.safety) h += `<div class="safe"><b>Safety procedure</b>Follow every step of the full SOP below, not this summary alone. If anything is unclear, stop and call the Safety Officer.</div>`;
+  if (a.revision_note) h += `<div class="rev"><b>Changed in the latest revision</b>${esc(a.revision_note)} Follow the current revision, and replace any old printout.</div>`;
+  if (a.sources.length) h += `<div class="sources"><h3>Source</h3>${a.sources.map((s) => sourceHtml(s, false)).join("")}${a.superseded_sources.map((s) => sourceHtml(s, true)).join("")}</div>`;
+  h += `<div class="meta">${a.gated ? "No document matched, the model was not asked" : esc(a.model)} · ${(a.latency_ms / 1000).toFixed(1)} s</div>`;
+  box.innerHTML = h;
+}
+
+let busy = false;
+async function ask(question) {
+  question = question.trim();
+  if (!question || busy) return;
+  busy = true; $("send").disabled = true; $("q").value = ""; $("q").blur();
+  $("samples").open = false;
+  const qa = document.createElement("section");
+  qa.className = "qa";
+  qa.innerHTML = `<p class="q">${esc(question)}</p><div class="card"><div class="thinking"><span class="dot"></span>Checking the documents…</div></div>`;
+  $("feed").prepend(qa);
+  qa.scrollIntoView({ behavior: "smooth", block: "start" });
+  const box = qa.querySelector(".card");
+  try {
+    const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || r.statusText);
+    render(box, data);
+  } catch (e) {
+    box.innerHTML = `<div class="err">${esc(e.message || "Network error. Is the laptop still on the same Wi-Fi?")}</div>`;
+  } finally {
+    busy = false; $("send").disabled = false;
+  }
+}
+
+$("f").onsubmit = (e) => { e.preventDefault(); ask($("q").value); };
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask($("q").value); } });
+</script>
+</body>
+</html>
